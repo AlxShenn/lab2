@@ -1,0 +1,7 @@
+a.b.c@example.com
+abc@example.com
+a.bc@example.com
+user+tag@example.com
+user@example.com
+a@b.com
+b@c.com
