@@ -1,84 +1,75 @@
-//swiftc task2.swift
-//./task2.exe
 import Foundation
 
-// функция для "нормализации" email
-func normalize(_ email: String) -> String? {
-    // проверка на наличие @
-    guard email.contains("@") else {
-        return nil
-    }
-
-    let parts = email.split(separator: "@")
-    
-    // должно быть ровно 2 части
-    if parts.count != 2 {
-        return nil
-    }
-
-    let name = String(parts[0])
-    let domain = String(parts[1])
-
-    if name.isEmpty || domain.isEmpty {
-        return nil
-    }
-
-    var newName = ""
-
-    for ch in name {
-        if ch == "+" {
-            break // игнорируем всё после +
-        }
-        if ch != "." {
-            newName.append(ch)
-        }
-    }
-
-    return newName + "@" + domain
+func isValidLocalPart(_ local: String) -> Bool {
+    // Length check
+    guard local.count >= 6 && local.count <= 30 else { return false }
+    // Cannot start or end with a dot
+    guard !local.hasPrefix(".") && !local.hasSuffix(".") else { return false }
+    // No consecutive dots
+    guard !local.contains("..") else { return false }
+    // Allowed characters: a-z, 0-9, ., +
+    let allowedSet = CharacterSet.lowercaseLetters
+        .union(.decimalDigits)
+        .union(CharacterSet(charactersIn: ".+"))
+    return local.unicodeScalars.allSatisfy { allowedSet.contains($0) }
 }
 
-var emails = Set<String>()
+func normalize(_ email: String) -> String? {
+    guard let atPos = email.firstIndex(of: "@") else { return nil }
+    let local = String(email[..<atPos])
+    let domain = String(email[atPos...])
 
-print("1 - input from console\n2 - input from file")
-if let choice = Int(readLine() ?? "") {
+    guard isValidLocalPart(local) else { return nil }
+
+    var newLocal = ""
+    for ch in local {
+        if ch == "+" { break }
+        if ch != "." { newLocal.append(ch) }
+    }
+    return newLocal + domain
+}
+
+func main() {
+    print("1 - input from console\n2 - input from file")
+    guard let choiceStr = readLine(), let choice = Int(choiceStr) else {
+        print("Invalid input")
+        return
+    }
+
+    var uniqueEmails = Set<String>()
 
     if choice == 1 {
-        print("Enter number of emails: ")
-        if let n = Int(readLine() ?? "") {
-            for _ in 0..<n {
-                if let email = readLine() {
-                    if let norm = normalize(email.trimmingCharacters(in: .whitespacesAndNewlines)) {
-                        emails.insert(norm)
-                    }
-                }
+        print("Enter number of emails:")
+        guard let nStr = readLine(), let n = Int(nStr) else { return }
+
+        for _ in 0..<n {
+            guard let email = readLine() else { continue }
+            if let norm = normalize(email) {
+                uniqueEmails.insert(norm)
             }
         }
-
     } else if choice == 2 {
-        print("Enter file name: ")
-        if let filename = readLine() {
-            do {
-                let content = try String(contentsOfFile: filename, encoding: .utf8)
-                let lines = content.components(separatedBy: .newlines)
+        print("Enter file name:")
+        guard let filename = readLine() else { return }
 
-                for line in lines {
-                    let email = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if email.isEmpty { continue }
-
-                    if let norm = normalize(email) {
-                        emails.insert(norm)
-                    }
+        do {
+            let content = try String(contentsOfFile: filename, encoding: .utf8)
+            let words = content.split { $0.isWhitespace || $0.isNewline }.map(String.init)
+            for email in words {
+                if let norm = normalize(email) {
+                    uniqueEmails.insert(norm)
                 }
-            } catch {
-                print("File open error")
-                exit(1)
             }
+        } catch {
+            print("File open error")
+            return
         }
-
     } else {
         print("Invalid choice")
-        exit(1)
+        return
     }
 
-    print("Number of unique emails: \(emails.count)")
+    print("Number of unique emails:", uniqueEmails.count)
 }
+
+main()

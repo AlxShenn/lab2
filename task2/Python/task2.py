@@ -1,50 +1,74 @@
-#python task2.py
-# функция для "нормализации" email
-def normalize(email):
-    at_pos = email.find('@')
-    name = email[:at_pos]
+import sys
+
+def is_valid_local_part(local: str) -> bool:
+    # Length check
+    if not (6 <= len(local) <= 30):
+        return False
+    # Cannot start or end with a dot
+    if local[0] == '.' or local[-1] == '.':
+        return False
+    # No consecutive dots
+    if '..' in local:
+        return False
+    # Allowed characters: a-z, 0-9, ., +
+    return all(c.isalnum() or c in '.+' for c in local) and local.islower()
+
+def normalize(email: str) -> str:
+    try:
+        at_pos = email.index('@')
+    except ValueError:
+        return ""
+    if at_pos == 0 or at_pos == len(email) - 1:
+        return ""
+
+    local = email[:at_pos]
     domain = email[at_pos:]
 
-    new_name = ""
-    for ch in name:
-        if ch == '+':
-            break  # игнорируем всё после +
-        if ch != '.':
-            new_name += ch
+    if not is_valid_local_part(local):
+        return ""
 
-    return new_name + domain
+    new_local = []
+    for c in local:
+        if c == '+':
+            break
+        if c != '.':
+            new_local.append(c)
+    return ''.join(new_local) + domain
 
-emails = set()
-
-print("1 - input from console\n2 - input from file")
-choice = int(input())
-
-if choice == 1:
-    n = int(input("Enter number of emails: "))
-    for _ in range(n):
-        email = input().strip()
-        emails.add(normalize(email))
-
-elif choice == 2:
-    filename = input("Enter file name: ").strip()
-
+def main():
+    print("1 - input from console\n2 - input from file")
     try:
-        # открываем файл с указанием кодировки
-        with open(filename, "r", encoding="utf-8") as f:
-            for line in f:
-                email = line.strip()
+        choice = int(input())
+    except ValueError:
+        print("Invalid choice")
+        return
 
-                if email == "":
-                    continue  # пропускаем пустые строки
+    emails = set()
 
-                emails.add(normalize(email))
+    if choice == 1:
+        n = int(input("Enter number of emails: "))
+        for _ in range(n):
+            email = input().strip()
+            norm = normalize(email)
+            if norm:
+                emails.add(norm)
+    elif choice == 2:
+        filename = input("Enter file name: ")
+        try:
+            with open(filename, 'r') as f:
+                for line in f:
+                    for email in line.split():
+                        norm = normalize(email)
+                        if norm:
+                            emails.add(norm)
+        except IOError:
+            print("File open error")
+            return
+    else:
+        print("Invalid choice")
+        return
 
-    except Exception as e:
-        print("File open error:", e)
-        exit()
+    print("Number of unique emails:", len(emails))
 
-else:
-    print("Invalid choice")
-    exit()
-
-print("Number of unique emails:", len(emails))
+if __name__ == "__main__":
+    main()
