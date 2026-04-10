@@ -10,8 +10,8 @@ def is_valid_local_part(local: str) -> bool:
     # No consecutive dots
     if '..' in local:
         return False
-    # Allowed characters: a-z, 0-9, ., +
-    return all(c.isalnum() or c in '.+' for c in local) and local.islower()
+    # Allowed characters: a-z, 0-9, ., *
+    return all(c.isalnum() or c in '.*' for c in local) and local.islower()
 
 def normalize(email: str) -> str:
     try:
@@ -29,7 +29,7 @@ def normalize(email: str) -> str:
 
     new_local = []
     for c in local:
-        if c == '+':
+        if c == '*':
             break
         if c != '.':
             new_local.append(c)

@@ -1,7 +1,5 @@
-;только на линуксе т.к. это nasm
 ;nasm -f elf64 task3.asm -o task3.o
-;gcc task3.o -o task3
-;./task3
+;gcc -no-pie task3.o -o task3
 section .data
     msg db "Enter N:", 10, 0
     fmt_in db "%d", 0
@@ -16,53 +14,69 @@ section .text
     global main
 
 main:
-    ; print "Enter N:"
+    push rbp
+    mov rbp, rsp
+
+    push rbx            ; сохраняем callee-saved
+    sub rsp, 8          ; выравнивание стека до 16 байт
+
+    ; printf("Enter N:")
     mov rdi, msg
-    xor rax, rax
+    xor eax, eax
     call printf
 
-    ; read n
+    ; scanf("%d", &n)
     mov rdi, fmt_in
     mov rsi, n
-    xor rax, rax
+    xor eax, eax
     call scanf
 
-    mov ecx, [n]     ; counter
-    xor ebx, ebx     ; count = 0
+    mov ebx, [n]        ; счетчик оставшихся чисел
+    xor r12d, r12d      ; result = 0
 
 loop_start:
-    cmp ecx, 0
+    cmp ebx, 0
     je done
 
-    ; read x
+    ; scanf("%d", &x)
     mov rdi, fmt_in
     mov rsi, x
-    xor rax, rax
+    xor eax, eax
     call scanf
 
     mov eax, [x]
 
-    ; root = sqrt(x) (очень грубо через цикл)
-    xor edx, edx
+    ; Проверка на полный квадрат
+    xor ecx, ecx        ; i = 0
+
 sqrt_loop:
-    imul edx, edx
+    mov edx, ecx
+    imul edx, ecx       ; edx = i*i
+
     cmp edx, eax
     je is_square
     ja not_square
-    inc edx
+
+    inc ecx
     jmp sqrt_loop
 
 is_square:
-    inc ebx
+    inc r12d
 
 not_square:
-    dec ecx
+    dec ebx
     jmp loop_start
 
 done:
     mov rdi, fmt_out
-    mov rsi, rbx
-    xor rax, rax
+    mov esi, r12d
+    xor eax, eax
     call printf
 
+    add rsp, 8
+    pop rbx
+    pop rbp
+    xor eax, eax
     ret
+
+section .note.GNU-stack noalloc noexec nowrite progbits

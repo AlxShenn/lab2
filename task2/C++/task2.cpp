@@ -24,7 +24,7 @@ bool isValidLocalPart(const string& local) {
     for (char c : local) {
         bool isAllowed = (c >= 'a' && c <= 'z') ||
                          (c >= '0' && c <= '9') ||
-                         c == '.' || c == '+';
+                         c == '.' || c == '*';
         if (!isAllowed)
             return false;
     }
@@ -44,7 +44,7 @@ string normalize(const string& email) {
 
     string newLocal = "";
     for (char c : local) {
-        if (c == '+')
+        if (c == '*')
             break;
         if (c != '.')
             newLocal += c;

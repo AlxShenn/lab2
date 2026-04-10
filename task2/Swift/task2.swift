@@ -10,7 +10,7 @@ func isValidLocalPart(_ local: String) -> Bool {
     // Allowed characters: a-z, 0-9, ., +
     let allowedSet = CharacterSet.lowercaseLetters
         .union(.decimalDigits)
-        .union(CharacterSet(charactersIn: ".+"))
+        .union(CharacterSet(charactersIn: ".*"))
     return local.unicodeScalars.allSatisfy { allowedSet.contains($0) }
 }
 
@@ -23,7 +23,7 @@ func normalize(_ email: String) -> String? {
 
     var newLocal = ""
     for ch in local {
-        if ch == "+" { break }
+        if ch == "*" { break }
         if ch != "." { newLocal.append(ch) }
     }
     return newLocal + domain

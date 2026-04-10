@@ -22,7 +22,7 @@ func isValidLocalPart(local string) bool {
 	}
 	// Allowed characters: a-z, 0-9, ., +
 	for _, c := range local {
-		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '.' || c == '+') {
+		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '.' || c == '*') {
 			return false
 		}
 	}
@@ -43,7 +43,7 @@ func normalize(email string) string {
 
 	var newLocal strings.Builder
 	for _, c := range local {
-		if c == '+' {
+		if c == '*' {
 			break
 		}
 		if c != '.' {
